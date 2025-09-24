@@ -34,30 +34,25 @@ class FaceRecognitionApp:
 
         self.theme = self.load_theme()
         
-        # Canvas + scrollable content  (store the canvas on self so we can theme it later)
+        # Canvas + scrollable content 
         self.canvas = Canvas(self.root, highlightthickness=0, bg=self.get_bg())
         self.scrollable_frame = Frame(self.canvas, bg=self.get_bg())
 
-        # Create a window for the frame and keep its TOP edge fixed, but center horizontally
         self._canvas_window_id = self.canvas.create_window(
             (0, 0), window=self.scrollable_frame, anchor="n"
         )
 
         self.canvas.pack(side="left", fill="both", expand=True)
 
-        # Update scrollregion as the frame grows
-        self.scrollable_frame.bind(
+          self.scrollable_frame.bind(
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
 
-        # Re-center the frame horizontally and make the window span the full canvas width
         def _center_content(event=None):
             self.canvas.update_idletasks()
             cw = max(1, self.canvas.winfo_width())
-            # make the inner window as wide as the canvas so left/right margins are equal
             self.canvas.itemconfigure(self._canvas_window_id, width=cw)
-            # place the window's TOP-CENTER at the middle of the canvas
             self.canvas.coords(self._canvas_window_id, cw / 2, 0)
 
         self.canvas.bind("<Configure>", _center_content)
@@ -66,7 +61,7 @@ class FaceRecognitionApp:
         self._recenter_main = _center_content
         self._recenter_main()
 
-        # Use the scrollable_frame as your main container
+        # Use the scrollable_frame as main container
         self.main_frame = self.scrollable_frame
 
         self.widget_references = []
@@ -246,7 +241,6 @@ class FaceRecognitionApp:
                                      activebackground=btn_bg, activeforeground=fg)
                 except tk.TclError:
                     pass
-                # also theme the parent frame if needed
                 try:
                     widget.master.configure(bg=bg)
                 except tk.TclError:
@@ -274,7 +268,7 @@ class FaceRecognitionApp:
             self.settings_btn.config(image="", text="⚙",
                                      bg=bg, activebackground=bg, fg=fg)
 
-        # 5) If an overlay panel is open, theme it (recursively)
+        # 5) If an overlay panel is open, theme it
         def _apply_theme_tree_local(widget):
             try:
                 if isinstance(widget, Frame):
@@ -301,11 +295,11 @@ class FaceRecognitionApp:
         # 6) Recenter the main content after palette change
         if hasattr(self, "_recenter_main") and callable(self._recenter_main):
             self.canvas.update_idletasks()
-            self._recenter_main()  # positions the content using the real canvas width
+            self._recenter_main() 
 
     def open_settings_window(self):
         """Open Settings inside the main window using the overlay panel (no new window)."""
-        body = self.open_panel("Settings")  # Back button is provided by open_panel()
+        body = self.open_panel("Settings")  
 
         bg = self.get_bg()
         fg = self.get_fg()
@@ -320,7 +314,7 @@ class FaceRecognitionApp:
         def set_theme(theme):
             self.theme = theme
             self.save_theme(theme)
-            self.apply_theme()   # keep the panel open so user can see the change immediately
+            self.apply_theme()  
 
         # Day/Night buttons (styled with current theme colors)
         tk.Button(
@@ -335,7 +329,6 @@ class FaceRecognitionApp:
             command=lambda: set_theme("night")
         ).pack(pady=4)
 
-    # --- Rest of the methods continue in next message due to length limit ---
     def toggle_camera(self):
         if not self.running:
             self.cap = cv2.VideoCapture(0)
@@ -346,7 +339,6 @@ class FaceRecognitionApp:
             self.control_btn.config(text="Stop")
             self.summary_btn.grid_remove()
             self.previous_btn.grid_remove()
-            # Reset engage overlay at start
             self.engagement_active = False
             self.target_label.config(text="")
             self.engage_bar.place_forget()
@@ -377,7 +369,6 @@ class FaceRecognitionApp:
             self.status.config(text="Status: Stopped", fg="red")
             self.control_btn.config(text="Start")
             self.session_data["end_time"] = datetime.now()
-            # Hide overlay when stopping
             self.engagement_active = False
             self.engage_bar.place_forget()
 
@@ -543,7 +534,6 @@ class FaceRecognitionApp:
         btn_bg = self.get_btn_bg()
 
         # two columns: text and map
-        # two columns: text and map (equal split)
         body.grid_columnconfigure(0, weight=1, uniform="cols")
         body.grid_columnconfigure(1, weight=1, uniform="cols")
 
@@ -832,35 +822,29 @@ class FaceRecognitionApp:
         Show the Engage overlay anchored to the bottom-right of the live video.
         This is called on the main thread via root.after(...).
         """
-        # Don't spam if it's already visible
         if self.engagement_active:
             return
 
         self.engagement_active = True
         self.target_label.config(text=f"Target Acquired: {name} — Awaiting engagement...")
 
-        # Place the overlay relative to the video widget
         try:
-            # bottom-right corner of the live video
             self.engage_bar.place(in_=self.video_label, relx=0.98, rely=0.98, anchor="se")
         except Exception:
-            # Fallback: bottom-right of the root window
             self.engage_bar.place(relx=0.98, rely=0.98, anchor="se")
 
     def open_panel(self, title=""):
         """Create a centered, responsive overlay panel and return its scrollable body frame."""
-        self.close_panel()  # ensure only one panel exists
+        self.close_panel() 
 
         bg = self.get_bg()
         fg = self.get_fg()
         btn_bg = self.get_btn_bg()
 
-        # let Tk compute current window size
         self.root.update_idletasks()
         root_w = max(700, self.root.winfo_width())
         root_h = max(500, self.root.winfo_height())
 
-        # responsive panel size (fits inside the window with margins)
         panel_w = min(int(root_w * 0.92), 1100)
         panel_h = min(int(root_h * 0.9), 820)
 
@@ -898,7 +882,6 @@ class FaceRecognitionApp:
         # keep scrollregion and inner width in sync
         def _on_body_config(_):
             body_canvas.configure(scrollregion=body_canvas.bbox("all"))
-            # make inner body always match canvas width (no horizontal cutoff)
             body_canvas.itemconfigure(body_id, width=body_canvas.winfo_width())
 
         body.bind("<Configure>", _on_body_config)
@@ -931,3 +914,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = FaceRecognitionApp(root)
     root.mainloop()
+
