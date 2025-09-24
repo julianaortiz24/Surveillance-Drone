@@ -20,7 +20,7 @@ def launch_route_planner():
 
     root = tk.Tk()
     root.title("Route Planner")
-    root.attributes('-fullscreen', True)  # Fullscreen window
+    root.attributes('-fullscreen', True)  
 
     canvas = Canvas(root, bg="white")
     canvas.pack(fill="both", expand=True)
@@ -36,3 +36,4 @@ def launch_route_planner():
 
 if __name__ == "__main__":
     launch_route_planner()
+
